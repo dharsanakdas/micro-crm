@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Micro-CRM - API Driven (With Org + Admin Registration)</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        padding-top: 56px;
+      }
+      .clickable {
+        cursor: pointer;
+      }
+      .role-badge {
+        text-transform: uppercase;
+        font-size: 0.7rem;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .muted-small {
+        font-size: 0.85rem;
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#/">Micro CRM</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navMain"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMain">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navLinks"></ul>
+          <div class="d-flex align-items-center text-white">
+            <div id="orgSelectorWrapper" class="me-2 hidden">
+              <select
+                id="orgSelector"
+                class="form-select form-select-sm"
+              ></select>
+            </div>
+            <div id="currentUserWrap" class="me-2 hidden">
+              <span id="currentUserDisplay"></span>
+            </div>
+            <button id="loginNavBtn" class="btn btn-outline-light btn-sm me-1">
+              Login
+            </button>
+            <button id="logoutBtn" class="btn btn-danger btn-sm hidden">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- APP -->
+    <div class="container mt-4" id="app">
+      <!-- login and dashboard pages rendered here -->
+      <div id="loginPage" class="w-100">
+        <div class="row justify-content-center">
+          <div class="col-md-8">
+            <div class="card mb-3">
+              <div class="card-body">
+                <h4 class="card-title">Login</h4>
+                <p class="text-muted">Enter your email and password</p>
+
+                <form id="loginForm" autocomplete="off" class="mb-3">
+                  <div class="row g-2">
+                    <div class="col-sm-7">
+                      <label class="form-label">Email (username)</label>
+                      <input
+                        id="loginEmail"
+                        name="loginEmail"
+                        class="form-control"
+                        placeholder="you@company.com"
+                      />
+                    </div>
+                    <div class="col-sm-5">
+                      <label class="form-label">Password</label>
+                      <input
+                        id="loginPassword"
+                        name="loginPassword"
+                        type="password"
+                        class="form-control"
+                        placeholder="password"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="d-flex gap-2 mt-3">
+                    <button id="doLogin" type="submit" class="btn btn-primary">
+                      Login
+                    </button>
+                   
+                    <button
+                      id="showRegisterOrg"
+                      type="button"
+                      class="btn btn-outline-info ms-auto"
+                    >
+                      Register Organization
+                    </button>
+                  </div>
+                 
+                </form>
+              </div>
+            </div>
+
+            <!-- Organization + Admin Registration Card (collapsed by default) -->
+            <div class="card" id="registerOrgCard" style="display: none">
+              <div class="card-body">
+                <h5 class="card-title">Register Organization & Admin</h5>
+                <p class="muted-small">
+                  Create an organization and register the first admin user in
+                  one step.
+                </p>
+
+                <form id="registerOrgForm">
+                  <div class="mb-2">
+                    <label class="form-label">Organization Name</label>
+                    <input id="regOrgName" class="form-control" required />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label"
+                      >Organization Slug / Code (optional)</label
+                    >
+                    <input
+                      id="regOrgSlug"
+                      class="form-control"
+                      placeholder="org-slug (optional)"
+                    />
+                  </div>
+
+                  <hr />
+
+                  <h6>Admin user</h6>
+                  <div class="mb-2">
+                    <label class="form-label">Admin Name</label>
+                    <input id="regAdminName" class="form-control" required />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Admin Email</label>
+                    <input
+                      id="regAdminEmail"
+                      type="email"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Admin Password</label>
+                    <input
+                      id="regAdminPassword"
+                      type="password"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+
+                  <div class="d-flex gap-2 mt-3">
+                    <button
+                      id="submitRegisterOrg"
+                      class="btn btn-success"
+                      type="submit"
+                    >
+                      Create Organization & Admin
+                    </button>
+                    <button
+                      id="cancelRegisterOrg"
+                      type="button"
+                      class="btn btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <div
+                      id="registerOrgStatus"
+                      class="ms-auto muted-small"
+                    ></div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- informational footer -->
+           
+          </div>
+        </div>
+      </div>
+
+      <div id="dashboardPage" class="hidden">
+        <!-- Contacts header -->
+        <div
+          class="d-flex justify-content-between align-items-center mb-3"
+          id="contacthead"
+        >
+          <h3>Contacts <small class="text-muted" id="orgNameSmall"></small></h3>
+          <div>
+            <button
+              id="btnUsersPage"
+              class="btn btn-outline-secondary btn-sm me-2 hidden"
+            >
+              Users
+            </button>
+            <button id="btnAddContact" class="btn btn-success btn-sm">
+              + Add Contact
+            </button>
+          </div>
+        </div>
+
+        <div class="card mb-4" id="contactsList">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Notes</th>
+                    <th style="width: 160px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="contactsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users section (hidden by default, admin only) -->
+        <div id="usersSection" class="hidden">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>
+              Users <small class="text-muted" id="usersOrgNameSmall"></small>
+            </h3>
+            <div>
+              <button
+                id="btnBackContacts"
+                class="btn btn-outline-secondary btn-sm"
+              >
+                Back to Contacts
+              </button>
+              <button id="btnAddUser" class="btn btn-success btn-sm">
+                + Add User
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Org</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Contact Modal (unchanged) -->
+    <div class="modal fade" id="contactModal" tabindex="-1">
+      <div class="modal-dialog">
+        <form id="addContactForm" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Contact</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="contactId" />
+            <div class="mb-2">
+              <label class="form-label">Name *</label
+              ><input id="contactName" class="form-control" required />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Email *</label
+              ><input
+                id="contactEmail"
+                type="email"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Phone (optional)</label
+              ><input id="contactPhone" class="form-control" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Notes (optional)</label
+              ><textarea
+                id="contactNotes"
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancel</button
+            ><button id="saveContactBtn" type="submit" class="btn btn-primary">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add/Edit User Modal (unchanged but reused by registration flow) -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+      <div class="modal-dialog">
+        <form id="addUserForm" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">User</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="userId" />
+            <div class="mb-2">
+              <label class="form-label">Name</label
+              ><input id="userName" class="form-control" required />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Email</label
+              ><input
+                id="userEmail"
+                type="email"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Role</label
+              ><select id="userRole" class="form-select">
+                <option value="admin">Admin</option>
+                <option value="member">Member</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <!-- <label class="form-label">Organization</label -->
+              <input
+                id="userOrg"
+                class="form-control"
+                placeholder="org id (optional)"
+                hidden
+              />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Password</label
+              ><input
+                id="userPassword"
+                type="password"
+                class="form-control"
+                placeholder="password"
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancel</button
+            ><button id="saveUserBtn" type="submit" class="btn btn-primary">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
+      // -------------------------------
+      // CONFIG
+      // -------------------------------
+      const API_BASE = "http://localhost:8082/api/v1";
+      let jwtToken = localStorage.getItem("jwtToken") || null;
+      let currentUser = JSON.parse(
+        localStorage.getItem("currentUser") || "null"
+      );
+
+      // bootstrap modal instances
+      const contactModal = new bootstrap.Modal(
+        document.getElementById("contactModal")
+      );
+      const userModal = new bootstrap.Modal(
+        document.getElementById("userModal")
+      );
+
+      // navbar elements
+      const loginNavBtn = document.getElementById("loginNavBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const orgSelectorWrapper = document.getElementById("orgSelectorWrapper");
+      const orgSelector = document.getElementById("orgSelector");
+      const currentUserWrap = document.getElementById("currentUserWrap");
+      const currentUserDisplay = document.getElementById("currentUserDisplay");
+      const navLinks = document.getElementById("navLinks");
+
+      // page elements
+      const loginPage = document.getElementById("loginPage");
+      const dashboardPage = document.getElementById("dashboardPage");
+      const contactsTableBody = document.getElementById("contactsTableBody");
+      const usersTableBody = document.getElementById("usersTableBody");
+      const btnUsersPage = document.getElementById("btnUsersPage");
+      const usersSection = document.getElementById("usersSection");
+      const btnBackContacts = document.getElementById("btnBackContacts");
+      const btnAddContact = document.getElementById("btnAddContact");
+      const btnAddUser = document.getElementById("btnAddUser");
+      const orgNameSmall = document.getElementById("orgNameSmall");
+      const usersOrgNameSmall = document.getElementById("usersOrgNameSmall");
+
+      // forms
+      const loginForm = document.getElementById("loginForm");
+      const addContactForm = document.getElementById("addContactForm");
+      const addUserForm = document.getElementById("addUserForm");
+
+      // registration form elements
+      const showRegisterOrgBtn = document.getElementById("showRegisterOrg");
+      const registerOrgCard = document.getElementById("registerOrgCard");
+      const registerOrgForm = document.getElementById("registerOrgForm");
+      const regOrgName = document.getElementById("regOrgName");
+      const regOrgSlug = document.getElementById("regOrgSlug");
+      const regAdminName = document.getElementById("regAdminName");
+      const regAdminEmail = document.getElementById("regAdminEmail");
+      const regAdminPassword = document.getElementById("regAdminPassword");
+      const registerOrgStatus = document.getElementById("registerOrgStatus");
+      const cancelRegisterOrg = document.getElementById("cancelRegisterOrg");
+
+      // utility: wrap fetch with auth header
+      function authHeaders(extra = {}) {
+        const h = { "Content-Type": "application/json", ...extra };
+        if (jwtToken) h["Authorization"] = `Bearer ${jwtToken}`;
+        return h;
+      }
+
+      // update navbar (based on currentUser)
+      function renderNav() {
+        navLinks.innerHTML = "";
+
+        function makeLi(href, text, show = true) {
+          if (!show) return;
+          const li = document.createElement("li");
+          li.className = "nav-item";
+          const a = document.createElement("a");
+          a.className = "nav-link clickable";
+          a.href = href;
+          a.textContent = text;
+          li.appendChild(a);
+          navLinks.appendChild(li);
+        }
+
+        const auth = !!(currentUser && jwtToken);
+        makeLi("#contacts", "Contacts", auth);
+        makeLi("#users", "Users", auth && currentUser.role === "admin");
+
+        if (auth) {
+          loginNavBtn.classList.add("hidden");
+          logoutBtn.classList.remove("hidden");
+          currentUserWrap.classList.remove("hidden");
+          currentUserDisplay.innerHTML = `<span class="me-2">${currentUser.name}</span><span class="badge bg-info role-badge">${currentUser.role}</span>`;
+          // org selector optional (if server returns list of orgs)
+          if (currentUser.orgId) {
+            orgSelectorWrapper.classList.remove("hidden");
+            orgSelector.innerHTML = `<option value="${currentUser.orgId}">${currentUser.orgId}</option>`;
+            orgSelector.value = currentUser.orgId;
+            orgNameSmall.textContent = currentUser.orgId;
+            usersOrgNameSmall.textContent = currentUser.orgId;
+          } else {
+            orgSelectorWrapper.classList.add("hidden");
+          }
+        } else {
+          loginNavBtn.classList.remove("hidden");
+          logoutBtn.classList.add("hidden");
+          currentUserWrap.classList.add("hidden");
+          orgSelectorWrapper.classList.add("hidden");
+        }
+      }
+
+      // show/hide pages
+      function showDashboard() {
+        loginPage.classList.add("hidden");
+        dashboardPage.classList.remove("hidden");
+        usersSection.classList.add("hidden");
+        contactsList.classList.remove("hidden");
+        contacthead.classList.remove("hidden");
+      }
+      function showLogin() {
+        loginPage.classList.remove("hidden");
+        dashboardPage.classList.add("hidden");
+      }
+      function showUsersSection() {
+        usersSection.classList.remove("hidden");
+        contactsList.classList.add("hidden");
+        // dashboardPage.classList.add("hidden");
+        contacthead.classList.add("hidden");
+      }
+
+      // --------------------------------
+      // Login
+      // --------------------------------
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+
+        // console.log()
+        if (!email || !password) return alert("Email and password required");
+
+        const btn = document.getElementById("doLogin");
+        btn.disabled = true;
+        btn.textContent = "Signing in...";
+
+        try {
+          const res = await fetch(`${API_BASE}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await res.json().catch(() => null);
+
+          if (!res.ok || !data) {
+            throw new Error((data && data.message) || `HTTP ${res.status}`);
+          }
+
+          const token =
+            data.token || data.data?.token || data.accessToken || null;
+          const user = data.user || data.data?.user || data.data || null;
+
+          if (!token || !user) {
+            console.error("Unexpected login response:", data);
+            throw new Error("Login response missing token or user");
+          }
+
+          jwtToken = token;
+          currentUser = user;
+          localStorage.setItem("jwtToken", jwtToken);
+          localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+          renderNav();
+          showDashboard();
+          await loadContacts();
+          if (currentUser.role === "admin") {
+            await loadUsers();
+            btnUsersPage.classList.remove("hidden");
+          } else {
+            btnUsersPage.classList.add("hidden");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Login failed: " + (err.message || "Unknown error"));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Login";
+        }
+      });
+
+      // clear saved auth
+      document.getElementById("clearAuth").addEventListener("click", () => {
+        localStorage.removeItem("jwtToken");
+        localStorage.removeItem("currentUser");
+        jwtToken = null;
+        currentUser = null;
+        renderNav();
+        showLogin();
+        alert("Cleared saved auth");
+      });
+
+      // logout
+      logoutBtn.addEventListener("click", () => {
+        jwtToken = null;
+        currentUser = null;
+        localStorage.removeItem("jwtToken");
+        localStorage.removeItem("currentUser");
+        renderNav();
+        showLogin();
+      });
+
+      // nav links routing
+      window.addEventListener("hashchange", () => {
+        const h = location.hash || "#/contacts";
+        if (h.startsWith("#/users")) {
+          if (!currentUser || currentUser.role !== "admin") {
+            alert("Unauthorized: admin only");
+            location.hash = "#/contacts";
+            return;
+          }
+          showDashboard();
+          showUsersSection();
+        } else {
+          showDashboard();
+          usersSection.classList.add("hidden");
+        }
+      });
+
+      // --------------------------------
+      // Register Organization + Admin
+      // --------------------------------
+      showRegisterOrgBtn.addEventListener("click", () => {
+        registerOrgCard.style.display =
+          registerOrgCard.style.display === "none" ? "block" : "none";
+        if (registerOrgCard.style.display === "block") {
+          registerOrgCard.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      });
+
+      cancelRegisterOrg.addEventListener("click", () => {
+        registerOrgCard.style.display = "none";
+      });
+
+      registerOrgForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        registerOrgStatus.textContent = "Creating organization...";
+        const orgName = regOrgName.value.trim();
+        const orgSlug = regOrgSlug.value.trim();
+        const adminName = regAdminName.value.trim();
+        const adminEmail = regAdminEmail.value.trim();
+        const adminPassword = regAdminPassword.value;
+
+        if (!orgName || !adminName || !adminEmail || !adminPassword) {
+          return alert(
+            "All fields are required for organization and admin registration."
+          );
+        }
+
+        try {
+          // 1) Try POST /orgs (or fallback to /organizations) with { name, slug }
+          const orgPayload = { name: orgName };
+          if (orgSlug) orgPayload.slug = orgSlug;
+
+          let res = await fetch(`${API_BASE}/auth/organizations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orgPayload),
+          });
+
+          // fallback if 404 or not supported
+          if (res.status === 404 || !res.ok) {
+            // try /organizations
+            res = await fetch(`${API_BASE}/auth/organizations`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(orgPayload),
+            });
+          }
+
+          const orgResp = await res.json().catch(() => null);
+          if (!res.ok || !orgResp) {
+            // some servers might return the created org under data or organization
+            console.error("Org create failed, response:", orgResp);
+            throw new Error(
+              (orgResp && orgResp.message) || `HTTP ${res.status}`
+            );
+          }
+
+          // determine org id from common shapes
+          const newOrg = orgResp.data.org;
+          const orgId = newOrg.orgId;
+
+          if (!orgId) {
+            console.warn(
+              "Couldn't determine org id from response, using org name as id. Response:",
+              orgResp
+            );
+          }
+
+          registerOrgStatus.textContent = "Creating admin user...";
+
+          // 2) Create admin user in the org: POST /user with role=admin and orgId
+          const userPayload = {
+            name: adminName,
+            email: adminEmail,
+            password: adminPassword,
+            role: "admin",
+            orgId: orgId,
+          };
+
+          const userRes = await fetch(`${API_BASE}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userPayload),
+          });
+
+          const userResp = await userRes.json().catch(() => null);
+          if (!userRes.ok || !userResp) {
+            console.error("Admin create failed:", userResp);
+            throw new Error(
+              (userResp && userResp.message) || `HTTP ${userRes.status}`
+            );
+          }
+
+          // Optionally attempt to sign the new admin in automatically:
+          // If your API returns the token in user creation, we use it. Otherwise we fall back to prompting login.
+          const returnedToken = userResp.token || userResp.data?.token || null;
+          const returnedUser =
+            userResp.user || userResp.data?.user || userResp.data || userResp;
+
+          registerOrgStatus.textContent =
+            "Done. Organization and admin created.";
+
+          // Prefill login form and optionally sign in automatically if token present
+          document.getElementById("loginEmail").value = adminEmail;
+          if (returnedToken) {
+            jwtToken = returnedToken;
+            currentUser = returnedUser || {
+              name: adminName,
+              email: adminEmail,
+              role: "admin",
+              orgId: userPayload.orgId,
+            };
+            localStorage.setItem("jwtToken", jwtToken);
+            localStorage.setItem("currentUser", JSON.stringify(currentUser));
+            renderNav();
+            showDashboard();
+            await loadContacts();
+            await loadUsers();
+            alert("Organization and admin created. You are signed in.");
+          } else {
+            registerOrgStatus.textContent +=
+              " Please sign in using the login form.";
+            alert(
+              "Organization and admin created. Please log in using the credentials you provided."
+            );
+          }
+
+          // hide the registration card after a short pause
+          setTimeout(() => {
+            registerOrgCard.style.display = "none";
+            registerOrgStatus.textContent = "";
+          }, 1200);
+        } catch (err) {
+          console.error("Register org error", err);
+          alert(
+            "Failed to register organization/admin: " + (err.message || "")
+          );
+          registerOrgStatus.textContent = "";
+        }
+      });
+
+      // --------------------------------
+      // LOAD CONTACTS FROM API
+      // --------------------------------
+      async function loadContacts() {
+        contactsTableBody.innerHTML =
+          '<tr><td colspan="6" class="text-center small text-muted">Loading...</td></tr>';
+        try {
+          const res = await fetch(`${API_BASE}/contacts`, {
+            headers: authHeaders(),
+          });
+          const data = await res.json().catch(() => null);
+          console.log(data);
+          if (!res.ok || !data)
+            throw new Error((data && data.message) || `HTTP ${res.status}`);
+          const list =
+            data.data ||
+            data.contacts ||
+            data.data?.contacts ||
+            (Array.isArray(data) ? data : []);
+          contactsTableBody.innerHTML = "";
+          if (!list || list.length === 0) {
+            contactsTableBody.innerHTML =
+              '<tr><td colspan="6" class="text-center text-muted">No contacts</td></tr>';
+            return;
+          }
+          list.forEach((c, idx) => {
+            console.log(c);
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${idx + 1}</td>
+              <td>${escapeHtml(c.name || "-")}</td>
+              <td>${escapeHtml(c.email || "-")}</td>
+              <td>${escapeHtml(c.phone || "-")}</td>
+              <td>${escapeHtml(c.notes || "-")}</td>
+              <td><button class="btn btn-sm btn-primary me-1 edit-contact">Edit</button><button class="btn btn-sm btn-danger delete-contact">Delete</button></td>
+            `;
+            tr.querySelector(".edit-contact").addEventListener("click", () =>
+              openEditContact(c)
+            );
+            tr.querySelector(".delete-contact").addEventListener("click", () =>
+              deleteContact(c)
+            );
+            contactsTableBody.appendChild(tr);
+          });
+          contactModal.hide();
+        } catch (err) {
+          console.error("Error loading contacts", err);
+          contactsTableBody.innerHTML =
+            '<tr><td colspan="6" class="text-center text-danger">Failed to load contacts</td></tr>';
+        }
+      }
+
+      // --------------------------------
+      // ADD/EDIT CONTACT (unchanged)
+      // --------------------------------
+      btnAddContact.addEventListener("click", () => {
+        document.getElementById("contactId").value = "";
+        document.getElementById("contactName").value = "";
+        document.getElementById("contactEmail").value = "";
+        document.getElementById("contactPhone").value = "";
+        document.getElementById("contactNotes").value = "";
+        contactModal.show();
+      });
+
+      addContactForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("contactId").value;
+        const payload = {
+          name: document.getElementById("contactName").value.trim(),
+          email: document.getElementById("contactEmail").value.trim(),
+          phone: document.getElementById("contactPhone").value.trim(),
+          notes: document.getElementById("contactNotes").value.trim(),
+        };
+        if (!payload.name || !payload.email)
+          return alert("Name and email required");
+        try {
+          let res;
+          if (id) {
+            $.ajax({
+              url: `${API_BASE}/contacts/${id}`,
+              method: "PUT",
+              contentType: "application/json",
+              headers: {
+                Authorization: `Bearer ${jwtToken}`,
+              },
+              data: JSON.stringify(payload),
+              success: function (data) {
+                alert("Contact updated.");
+                loadContacts();
+                // contactModal.hide()
+              },
+              error: function (xhr) {
+                alert("Failed to update contact");
+              },
+            });
+          } else {
+            $.ajax({
+              url: `${API_BASE}/contacts`,
+              method: "POST",
+              contentType: "application/json",
+              headers: {
+                Authorization: `Bearer ${jwtToken}`,
+              },
+              data: JSON.stringify(payload),
+              success: function (data) {
+                console.log("Contact saved:", data);
+
+                if (!data.success) {
+                  alert(data.message || "Failed to save contact");
+                  return;
+                }
+
+                alert("Contact saved successfully!");
+                loadContacts();
+                // contactModal.hide();
+              },
+              error: function (xhr, status, error) {
+                console.error("Error saving contact:", xhr.responseText);
+                alert("Failed to save contact: " + error);
+              },
+            });
+          }
+          // const data = await res.json().catch(() => null);
+          // if (!res.ok || !data)
+          //   throw new Error((data && data.message) || `HTTP ${res.status}`);
+          // contactModal.hide();
+          // await loadContacts();
+        } catch (err) {
+          console.error(err);
+          alert("Failed to save contact: " + (err.message || ""));
+        }
+      });
+
+      function openEditContact(c) {
+        // console.log(c);
+        document.getElementById("contactId").value = c.contactId || "";
+        document.getElementById("contactName").value = c.name || "";
+        document.getElementById("contactEmail").value = c.email || "";
+        document.getElementById("contactPhone").value = c.phone || "";
+        document.getElementById("contactNotes").value = c.notes || "";
+        contactModal.show();
+      }
+
+      async function deleteContact(c) {
+        if (!confirm("Delete this contact?")) return;
+        try {
+          const res = await fetch(
+            `${API_BASE}/contacts/${encodeURIComponent(c.contactId)}`,
+            { method: "DELETE", headers: authHeaders() }
+          );
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data)
+            throw new Error((data && data.message) || `HTTP ${res.status}`);
+          await loadContacts();
+        } catch (err) {
+          console.error(err);
+          alert("Failed to delete contact");
+        }
+      }
+
+      // 1. Wire top Users button
+      btnUsersPage.addEventListener("click", () => {
+        location.hash = "#/users";
+      });
+
+      // 2. Ensure users are loaded on hash change
+
+      window.addEventListener("hashchange", async () => {
+        console.log(location.hash);
+        const h = location.hash || "#/contacts";
+
+        if (h === "#users") {
+          if (!currentUser || currentUser.role !== "admin") {
+            alert("Unauthorized: admin only");
+            location.hash = "#/contacts";
+            return;
+          }
+
+          showDashboard();
+          showUsersSection();
+          usersOrgNameSmall.textContent = currentUser?.orgId || "";
+
+          loadUsers(); // refresh table
+          return;
+
+          // CONTACTS PAGE (default)
+          // showDashboard();
+          // usersSection.classList.add("hidden");
+
+          //   showDashboard();
+          //   showUsersSection();
+          // usersOrgNameSmall.textContent = currentUser?.orgId || "";
+        } else {
+          console.log("not admin");
+          showDashboard();
+          usersSection.classList.add("hidden");
+        }
+      });
+
+      // --------------------------------
+      // LOAD USERS (unchanged)
+      // --------------------------------
+      async function loadUsers() {
+        usersTableBody.innerHTML =
+          '<tr><td colspan="6" class="text-center small text-muted">Loading...</td></tr>';
+        try {
+          const res = await fetch(`${API_BASE}/user`, {
+            headers: authHeaders(),
+          });
+          const data = await res.json().catch(() => null);
+          // console.log(data)
+          if (!res.ok || !data)
+            throw new Error((data && data.message) || `HTTP ${res.status}`);
+          const list = data || data.data?.users || [];
+          usersTableBody.innerHTML = "";
+          if (!list || list.length === 0) {
+            usersTableBody.innerHTML =
+              '<tr><td colspan="6" class="text-center text-muted">No users</td></tr>';
+            return;
+          }
+          console.log(list);
+          list.data.forEach((u, idx) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${idx + 1}</td>
+              <td>${escapeHtml(u.name || "-")}</td>
+              <td>${escapeHtml(u.email || "-")}</td>
+              <td>${escapeHtml(u.role || "-")}</td>
+              <td>${escapeHtml(u.orgId || "-")}</td>
+            `;
+            // tr.querySelector(".edit-user").addEventListener("click", () =>
+            //   openEditUser(u)
+            // );
+            // tr.querySelector(".del-user").addEventListener("click", () =>
+            //   deleteUser(u)
+            // );
+            usersTableBody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Error loading users", err);
+          usersTableBody.innerHTML =
+            '<tr><td colspan="6" class="text-center text-danger">Failed to load users</td></tr>';
+        }
+      }
+
+      // --------------------------------
+      // ADD/EDIT USER (unchanged)
+      // --------------------------------
+      btnAddUser.addEventListener("click", () => {
+        document.getElementById("userId").value = "";
+        document.getElementById("userName").value = "";
+        document.getElementById("userEmail").value = "";
+        document.getElementById("userRole").value = "member";
+        document.getElementById("userOrg").value = currentUser?.orgId || "";
+        document.getElementById("userPassword").value = "";
+        userModal.show();
+      });
+
+      addUserForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!currentUser || currentUser.role !== "admin")
+          return alert("Unauthorized");
+        const id = document.getElementById("userId").value;
+
+        let name = document.getElementById("userName").value.trim();
+        let email = document.getElementById("userEmail").value.trim();
+        let role = document.getElementById("userRole").value;
+        let orgId =
+          document.getElementById("userOrg").value.trim() || undefined;
+        let password =
+          document.getElementById("userPassword").value || undefined;
+        // };
+        const payload = {
+          name,
+          email,
+          password,
+          role,
+          orgId,
+        };
+
+        console.log(payload);
+        if (!payload.name || !payload.email)
+          return alert("Name and email required");
+        try {
+          let res;
+          if (id) {
+            res = await fetch(`${API_BASE}/user/${encodeURIComponent(id)}`, {
+              method: "PUT",
+              headers: authHeaders(),
+              body: JSON.stringify(payload),
+            });
+          } else {
+            $.ajax({
+              url: `${API_BASE}/user`,
+              method: "POST",
+              contentType: "application/json",
+              headers: { Authorization: `Bearer ${jwtToken}` },
+              data: JSON.stringify(payload),
+              success(data) {
+                console.log(data);
+                userModal.hide();
+                loadUsers();
+              },
+              error(xhr) {
+                console.log("err", xhr.responseText);
+              },
+            });
+          }
+          // const data = await res.json().catch(() => null);
+          // if (!res.ok || !data)
+          //   throw new Error((data && data.message) || `HTTP ${res.status}`);
+        } catch (err) {
+          console.error(err);
+          alert("Failed to save user");
+        }
+      });
+
+      function openEditUser(u) {
+        document.getElementById("userId").value = u.id || "";
+        document.getElementById("userName").value = u.name || "";
+        document.getElementById("userEmail").value = u.email || "";
+        document.getElementById("userRole").value = u.role || "member";
+        document.getElementById("userOrg").value = u.orgId || "";
+        document.getElementById("userPassword").value = "";
+        userModal.show();
+      }
+
+      async function deleteUser(u) {
+        if (!confirm("Delete user?")) return;
+        try {
+          const res = await fetch(
+            `${API_BASE}/user/${encodeURIComponent(u.id)}`,
+            { method: "DELETE", headers: authHeaders() }
+          );
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data)
+            throw new Error((data && data.message) || `HTTP ${res.status}`);
+          await loadUsers();
+        } catch (err) {
+          console.error(err);
+          alert("Failed to delete user");
+        }
+      }
+
+      // --------------------------------
+      // Helpers
+      // --------------------------------
+      function escapeHtml(s) {
+        if (s === null || s === undefined) return "";
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function authHeaders(extra = {}) {
+        const headers = { ...extra };
+        if (jwtToken) headers["Authorization"] = `Bearer ${jwtToken}`;
+        return headers;
+      }
+
+      // --------------------------------
+      // Boot
+      // --------------------------------
+
+      (function boot() {
+        jwtToken = localStorage.getItem("jwtToken") || null;
+        currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+        renderNav();
+        if (jwtToken && currentUser) {
+          showDashboard();
+          loadContacts();
+          if (currentUser.role === "admin") {
+            btnUsersPage.classList.remove("hidden");
+
+            loadUsers();
+          }
+        } else {
+          showLogin();
+          showUsersSection;
+        }
+
+        // wire nav buttons
+        loginNavBtn.addEventListener("click", () => {
+          location.hash = "#/";
+          showLogin();
+        });
+      })();
+    </script>
+  </body>
+</html>
