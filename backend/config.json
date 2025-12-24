@@ -1,7 +1,7 @@
 {
     "port":8082,
     "jwtSecret":"abc",
-    "mongoURI":"mongodb+srv://dharsanakdas_db_user:admin123@cluster0.s5uijp9.mongodb.net/microcrm?appName=Cluster0"
+    "mongoURI":""
 }
 
 
